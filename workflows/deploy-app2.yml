@@ -1,0 +1,30 @@
+name: Deploy Application 2 (Port 3000)
+
+on:
+  push:
+    branches:
+      - main # Trigger saat ada push ke branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kode sumber
+        uses: actions/checkout@v3
+
+      - name: Konfigurasi SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy ke Server Aplikasi 2
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+        run: |
+          # Perintah rsync untuk menyalin file ke server
+          ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_IP} "mkdir -p /var/www/web2.com/public_html"
+          rsync -avz --delete ./ ${SERVER_USER}@${SERVER_IP}:/var/www/web2.com/public_html/
+          
+          # Opsional: restart FPM (jika ada sesi PHP yang perlu direset)
+          # ssh ${SERVER_USER}@${SERVER_IP} "sudo systemctl restart php8.1-fpm"
